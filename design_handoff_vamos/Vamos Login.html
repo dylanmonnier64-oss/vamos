@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Vamos · Connexion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Boldonse&family=Big+Shoulders+Display:wght@400;600;800&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    @keyframes vamosBlink {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+    html, body { background: #060309; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="login-variations.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const { useState } = React;
+
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "intensity": 0.55,
+      "chaos": 1,
+      "seed": 7
+    }/*EDITMODE-END*/;
+
+    function App() {
+      const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+      return (
+        <>
+          <LoginPistaFR intensity={t.intensity} chaos={t.chaos} seed={t.seed} />
+
+          <TweaksPanel title="Tweaks · Vamos">
+            <TweakSection label="Ambiance" />
+            <TweakSlider
+              label="Reflets violets"
+              value={t.intensity}
+              min={0} max={1.6} step={0.05}
+              unit="×"
+              onChange={(v) => setTweak('intensity', v)}
+            />
+            <TweakSection label="Wordmark dispersé" />
+            <TweakSlider
+              label="Chaos des lettres"
+              value={t.chaos}
+              min={0} max={2.5} step={0.1}
+              unit="×"
+              onChange={(v) => setTweak('chaos', v)}
+            />
+            <TweakNumber
+              label="Seed (motif)"
+              value={t.seed}
+              min={1} max={999} step={1}
+              onChange={(v) => setTweak('seed', v)}
+            />
+            <TweakButton label="Re-disperser les lettres" onClick={() => setTweak('seed', Math.floor(Math.random() * 999) + 1)} />
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

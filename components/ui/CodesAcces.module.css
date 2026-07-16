@@ -1,0 +1,56 @@
+.codesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.codeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.codeInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.codeNom {
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  color: var(--ink-0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.codeLien {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--copper-hi);
+}
+.copyBtn {
+  flex: 0 0 auto;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+.copyBtn:hover {
+  border-color: var(--copper-accent);
+  color: var(--ink-0);
+}
+.copyBtnDone {
+  border-color: var(--copper-accent);
+  color: var(--copper-hi);
+}

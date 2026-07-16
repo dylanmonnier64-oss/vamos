@@ -1,0 +1,172 @@
+.page {
+  min-height: 100vh;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+/* ─── Topbar ─────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.brandOrg {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.brandOrg::before {
+  content: '·';
+  margin-right: 14px;
+  color: var(--ink-3);
+}
+
+/* ─── En-tête de liste ───────────────────────────────────────────── */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.headerTitle {
+  font-family: 'Geist', sans-serif;
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-0);
+  margin: 0;
+}
+
+/* ─── Grille de tournois ─────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(.2, .7, .3, 1), border-color 200ms ease;
+}
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.cardLink:hover .card {
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.cardNom {
+  font-family: 'Geist', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-0);
+  margin: 0;
+  line-height: 1.3;
+}
+.cardMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cardMetaRow {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cardMetaLabel {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  min-width: 92px;
+}
+.cardMetaValue {
+  color: var(--ink-1);
+}
+
+/* ─── Pilules de statut (verre) ──────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+.badgeEnCours {
+  border-color: rgba(200, 110, 50, 0.42);
+  background: rgba(200, 110, 50, 0.14);
+  color: var(--ink-0);
+  box-shadow: 0 0 16px -6px oklch(0.55 0.18 55 / 0.7);
+}
+.badgeBrouillon {
+  color: var(--ink-2);
+}
+.badgeTermine {
+  color: var(--ink-3);
+}
+
+/* ─── État vide ──────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 72px 24px;
+}
+.emptyText {
+  font-family: 'Geist', sans-serif;
+  font-size: 15px;
+  color: var(--ink-2);
+  max-width: 360px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ─── Message compte non rattaché ────────────────────────────────── */
+.notice {
+  font-family: 'Geist', sans-serif;
+  font-size: 15px;
+  color: var(--ink-1);
+  padding: 40px 0;
+}

@@ -1,0 +1,292 @@
+.page {
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(24px, 2.6vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ─── Header ──────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.brandTournoi {
+  font-family: 'Geist', sans-serif;
+  font-size: clamp(20px, 2.2vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-0);
+}
+.sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-1);
+}
+
+/* ─── Grille des terrains ─────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.terrain {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 24px;
+  min-height: 220px;
+}
+.terrainLive {
+  border-color: rgba(200, 110, 50, 0.4) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 32px 80px -20px rgba(0, 0, 0, 0.6),
+    0 0 60px -14px oklch(0.55 0.18 55 / 0.5) !important;
+}
+
+.terrainHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.terrainNom {
+  font-family: 'Boldonse', 'Big Shoulders Display', serif;
+  font-size: 22px;
+  text-transform: uppercase;
+  color: var(--ink-0);
+}
+.chronoWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  color: var(--copper-hi);
+}
+
+/* ─── Match sur le terrain ────────────────────────────────────────── */
+.equipes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.equipe {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: 'Geist', sans-serif;
+  font-size: 16px;
+  color: var(--ink-1);
+}
+.equipeNom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.score {
+  font-family: 'Geist Mono', monospace;
+  font-size: 18px;
+  color: var(--ink-0);
+  flex: 0 0 auto;
+}
+.vs {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.foot {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-2);
+}
+.badgeLive {
+  border-color: rgba(200, 110, 50, 0.42);
+  background: rgba(200, 110, 50, 0.14);
+  color: var(--ink-0);
+}
+
+.vide {
+  font-family: 'Geist', sans-serif;
+  font-size: 14px;
+  color: var(--ink-3);
+  font-style: italic;
+  margin: auto 0;
+}
+
+.erreur {
+  font-family: 'Geist', sans-serif;
+  font-size: 13px;
+  color: #ff8a8a;
+}
+
+.banner {
+  font-family: 'Geist', sans-serif;
+  font-size: 15px;
+  color: var(--ink-1);
+  text-align: center;
+  padding: 20px 24px;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Emplacement sponsor — réservé, sans style (besoin produit connu). */
+.sponsorSlot {
+  flex: 1 1 auto;
+  min-height: 1px;
+}
+
+/* ─── Vue par créneau (élimination) ───────────────────────────────── */
+.creneaux {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.creneauPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px;
+}
+.creneauLive {
+  border-color: rgba(200, 110, 50, 0.4) !important;
+}
+.creneauHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.creneauNom {
+  font-family: 'Boldonse', 'Big Shoulders Display', serif;
+  font-size: 20px;
+  text-transform: uppercase;
+  color: var(--ink-0);
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-2);
+}
+.pillLive {
+  border-color: rgba(200, 110, 50, 0.42);
+  background: rgba(200, 110, 50, 0.14);
+  color: var(--ink-0);
+}
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.matchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.matchRowLive {
+  border-color: rgba(200, 110, 50, 0.32);
+  background: rgba(200, 110, 50, 0.08);
+}
+.terrainBadge {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-1);
+  flex: 0 0 auto;
+  min-width: 28px;
+}
+.matchTeams {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  font-size: 14.5px;
+  color: var(--ink-0);
+  min-width: 0;
+}
+.matchTeams > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scoreMid {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-2);
+  flex: 0 0 auto;
+}
+.inconnu {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.matchEnd {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+.eta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: var(--ink-2);
+}
