@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ChronoLive from '@/components/ui/ChronoLive'
 import LiveDot from '@/components/ui/LiveDot'
@@ -20,31 +20,6 @@ interface Props {
   matchsInitial: Match[]
   equipeNoms: Record<string, string>
   libelles: Record<string, { e1: string; e2: string }>
-}
-
-// Copie PURE de filtrerLancables (inlinée pour ne pas tirer next/headers dans le
-// bundle client). Un match est LANÇABLE si son terrain est libre, ses 2 équipes
-// connues ET présentes (la présence est cochée par le manager sur /live). Le
-// bouton « Lancer » public n'apparaît donc qu'une fois les deux équipes là — la
-// RPC demarrer_match le vérifie aussi côté SQL, l'UI ne fait pas foi.
-function lancablesSur(matchs: Match[]): Set<string> {
-  const occupes = new Set<number>()
-  for (const m of matchs) if (m.statut === 'en_cours' && m.terrain != null) occupes.add(m.terrain)
-  const ids = new Set<string>()
-  for (const m of matchs) {
-    if (
-      m.statut === 'en_attente' &&
-      m.est_bye === false &&
-      m.equipe1_id != null &&
-      m.equipe2_id != null &&
-      m.terrain != null &&
-      !occupes.has(m.terrain) &&
-      m.equipe1_presente === true &&
-      m.equipe2_presente === true
-    )
-      ids.add(m.id)
-  }
-  return ids
 }
 
 function formatHeure(iso: string | null): string {
@@ -127,6 +102,13 @@ export default function TableauLive({
     </header>
   )
 
+  // Élimination : le board (design_handoff_vamos/tournoi-board). /tableau est un
+  // écran public en LECTURE SEULE (cf. CLAUDE.md) — pas de bouton Lancer ici, le
+  // démarrage se fait côté manager (/live et page check-in).
+  if (format === 'elimination') {
+    return <VueCreneaux matchs={matchs} equipeNoms={equipeNoms} libelles={libelles} nbTerrains={nbTerrains} erreur={erreur} />
+  }
+
   return (
     <main className={styles.page}>
       {header}
@@ -137,45 +119,74 @@ export default function TableauLive({
           l&apos;organisateur aura démarré le tournoi.
         </div>
       )}
-
-      {format === 'elimination' ? (
-        <VueCreneaux
-          matchs={matchs}
-          equipeNoms={equipeNoms}
-          libelles={libelles}
-          demarre={demarre}
-          onLancer={lancer}
-        />
-      ) : (
-        <VueTerrains
-          matchs={matchs}
-          nbTerrains={nbTerrains}
-          format={format}
-          equipeNoms={equipeNoms}
-          demarre={demarre}
-          onLancer={lancer}
-        />
-      )}
+      <VueTerrains
+        matchs={matchs}
+        nbTerrains={nbTerrains}
+        format={format}
+        equipeNoms={equipeNoms}
+        demarre={demarre}
+        onLancer={lancer}
+      />
     </main>
   )
 }
 
-// ── Vue par CRÉNEAU (élimination) ────────────────────────────────────────────
+// ── Horloge live du board (met à jour toutes les 20 s) ───────────────────────
+function heureHHMM(): string {
+  const d = new Date()
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+function BoardClock() {
+  const [t, setT] = useState(heureHHMM())
+  useEffect(() => {
+    const id = setInterval(() => setT(heureHHMM()), 20000)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <div className={styles.boardClock}>
+      <span className={styles.boardClockTime}>{t}</span>
+    </div>
+  )
+}
 
+// ── Pill liquid-glass (statut de match / drapeaux) ───────────────────────────
+function LiquidPill({ tone, children }: { tone: 'lpillStatus' | 'lpillStatusAccent' | 'lpillLive' | 'lpillNext'; children: ReactNode }) {
+  return (
+    <span className={`${styles.lpill} ${styles[tone]}`}>
+      <span className={styles.lpillBg} />
+      <span className={styles.lpillShadow} />
+      <span className={styles.lpillContent}>{children}</span>
+    </span>
+  )
+}
+
+// Libellé de tour (« Quart de finale », « Consolante »…) déduit du nombre de
+// matchs du tour (total/2^tour), sans avoir besoin de nb_equipes.
+function roundLabel(m: Match, matchs: Match[]): string {
+  if (m.tableau === 'consolante') return 'Consolante'
+  const nb = matchs.filter((x) => x.tableau === 'winners' && x.tour === m.tour).length
+  if (nb === 1) return 'Finale'
+  if (nb === 2) return 'Demi-finale'
+  if (nb === 4) return 'Quart de finale'
+  if (nb === 8) return 'Huitième'
+  if (nb === 16) return 'Seizième'
+  return `Tour ${m.tour}`
+}
+
+// ── Board par CRÉNEAU (élimination) — une ligne par terrain ──────────────────
 function VueCreneaux({
   matchs,
   equipeNoms,
   libelles,
-  demarre,
-  onLancer,
+  nbTerrains,
+  erreur,
 }: {
   matchs: Match[]
   equipeNoms: Record<string, string>
   libelles: Record<string, { e1: string; e2: string }>
-  demarre: boolean
-  onLancer: (id: string) => void
+  nbTerrains: number
+  erreur: string | null
 }) {
-  const demarrables = lancablesSur(matchs)
   const nomOuLabel = (m: Match, cote: 1 | 2): string => {
     const id = cote === 1 ? m.equipe1_id : m.equipe2_id
     if (id) return equipeNoms[id] ?? '—'
@@ -183,9 +194,9 @@ function VueCreneaux({
   }
   const inconnu = (m: Match, cote: 1 | 2) => (cote === 1 ? m.equipe1_id : m.equipe2_id) == null
 
-  // Matchs joués (hors byes) groupés par créneau.
   const joues = matchs.filter((m) => !m.est_bye && m.creneau != null)
   const creneaux = [...new Set(joues.map((m) => m.creneau as number))].sort((a, b) => a - b)
+  const terrains = Array.from({ length: Math.max(1, nbTerrains) }, (_, i) => i + 1)
 
   const statutCreneau = (cr: number): 'termine' | 'en_cours' | 'a_venir' => {
     const ms = joues.filter((m) => m.creneau === cr)
@@ -193,70 +204,102 @@ function VueCreneaux({
     if (ms.every((m) => m.statut === 'termine')) return 'termine'
     return 'a_venir'
   }
-  // « À suivre » = premier créneau à venir (le plus petit non terminé et sans en_cours).
   const aSuivre = creneaux.find((cr) => statutCreneau(cr) === 'a_venir')
-
-  if (creneaux.length === 0) {
-    return <p className={styles.vide}>Aucun match généré.</p>
+  const heureCreneau = (cr: number): string => {
+    const t = joues
+      .filter((m) => m.creneau === cr)
+      .map((m) => m.heure_convocation_estimee ?? m.heure_convocation)
+      .filter((x): x is string => !!x)
+      .sort()[0]
+    return formatHeure(t ?? null)
   }
 
-  return (
-    <div className={styles.creneaux}>
-      {creneaux.map((cr) => {
-        const etat = statutCreneau(cr)
-        const ms = joues
-          .filter((m) => m.creneau === cr)
-          .sort((a, b) => (a.terrain ?? 0) - (b.terrain ?? 0))
-        return (
-          <GlassCard key={cr} className={`${styles.creneauPanel} ${etat === 'en_cours' ? styles.creneauLive : ''}`.trim()}>
-            <div className={styles.creneauHead}>
-              <span className={styles.creneauNom}>Créneau {cr}</span>
-              {etat === 'en_cours' ? (
-                <span className={`${styles.pill} ${styles.pillLive}`}>
-                  <LiveDot /> En direct
-                </span>
-              ) : cr === aSuivre ? (
-                <span className={styles.pill}>À suivre</span>
-              ) : etat === 'termine' ? (
-                <span className={styles.pill}>Terminé</span>
-              ) : null}
-            </div>
+  const header = (
+    <header className={styles.boardHeader}>
+      <h1 className={styles.boardTitle}>
+        <span>vamos</span>
+        <span className={styles.boardTitleAccent}>tournoi</span>
+      </h1>
+      {/* Emplacement sponsor — réservé, volontairement vide, à ne pas supprimer. */}
+      <div className={styles.sponsorSlot} data-slot="sponsor" aria-label="Emplacement sponsor" />
+      <BoardClock />
+    </header>
+  )
 
-            <div className={styles.matchList}>
-              {ms.map((m) => {
-                const live = m.statut === 'en_cours'
-                const score = formatScoreSets(m.score_equipe1, m.score_equipe2)
-                return (
-                  <div key={m.id} className={`${styles.matchRow} ${live ? styles.matchRowLive : ''}`.trim()}>
-                    <span className={styles.terrainBadge}>T{m.terrain}</span>
-                    <div className={styles.matchTeams}>
-                      <span className={inconnu(m, 1) ? styles.inconnu : undefined}>{nomOuLabel(m, 1)}</span>
-                      <span className={styles.scoreMid}>{score || 'vs'}</span>
-                      <span className={inconnu(m, 2) ? styles.inconnu : undefined}>{nomOuLabel(m, 2)}</span>
+  return (
+    <main className={styles.board}>
+      {header}
+      {erreur && <p className={styles.erreur}>{erreur}</p>}
+
+      <div className={styles.boardGrid}>
+        {creneaux.map((cr) => {
+          const etat = statutCreneau(cr)
+          return (
+            <section key={cr} className={`${styles.slot} ${etat === 'en_cours' ? styles.slotLive : ''}`.trim()}>
+              <header className={styles.slotHead}>
+                <div className={styles.slotTime}>
+                  <span className={styles.slotTimeH}>{heureCreneau(cr)}</span>
+                  <span className={styles.slotTimeMeta}>
+                    {nbTerrains} terrain{nbTerrains > 1 ? 's' : ''}
+                  </span>
+                </div>
+                {etat === 'en_cours' ? (
+                  <LiquidPill tone="lpillLive">
+                    <LiveDot /> En direct
+                  </LiquidPill>
+                ) : cr === aSuivre ? (
+                  <LiquidPill tone="lpillNext">À suivre</LiquidPill>
+                ) : null}
+              </header>
+
+              <div className={styles.slotBody}>
+                {terrains.map((t) => {
+                  const m = joues.find((x) => x.terrain === t && x.creneau === cr)
+                  if (!m) {
+                    return (
+                      <div key={t} className={`${styles.match} ${styles.matchVide}`}>
+                        <div className={styles.matchCourt}>
+                          <span className={styles.courtLabel}>Terrain {t}</span>
+                        </div>
+                        <span className={styles.vide}>libre</span>
+                        <span />
+                      </div>
+                    )
+                  }
+                  const live = m.statut === 'en_cours'
+                  const score = formatScoreSets(m.score_equipe1, m.score_equipe2)
+                  return (
+                    <div key={t} className={`${styles.match} ${live ? styles.matchLive : ''}`.trim()}>
+                      <div className={styles.matchCourt}>
+                        <span className={styles.courtLabel}>Terrain {t}</span>
+                        <LiquidPill tone={live ? 'lpillStatusAccent' : 'lpillStatus'}>
+                          {live ? 'En cours' : m.statut === 'termine' ? 'Terminé' : roundLabel(m, matchs)}
+                        </LiquidPill>
+                      </div>
+                      <div className={styles.teams}>
+                        <span className={inconnu(m, 1) ? styles.inconnu : undefined}>{nomOuLabel(m, 1)}</span>
+                        <span className={styles.teamsVs}>vs</span>
+                        <span className={inconnu(m, 2) ? styles.inconnu : undefined}>{nomOuLabel(m, 2)}</span>
+                      </div>
+                      <div className={styles.matchEnd}>
+                        {live && m.heure_debut ? (
+                          <span className={styles.chronoWrapMini}>
+                            <ChronoLive startTime={m.heure_debut} />
+                          </span>
+                        ) : m.statut === 'termine' && score ? (
+                          <span className={styles.score}>{score}</span>
+                        ) : null}
+                      </div>
+                      {live && <LiveDot />}
                     </div>
-                    <div className={styles.matchEnd}>
-                      {live && m.heure_debut ? (
-                        <span className={styles.chronoWrap}>
-                          <LiveDot /> <ChronoLive startTime={m.heure_debut} />
-                        </span>
-                      ) : m.statut === 'termine' ? (
-                        <span className={styles.badge}>Terminé</span>
-                      ) : demarre && demarrables.has(m.id) ? (
-                        <LiquidButton variant="primary" type="button" onClick={() => onLancer(m.id)}>
-                          Lancer
-                        </LiquidButton>
-                      ) : (
-                        <span className={styles.eta}>{formatHeure(m.heure_convocation_estimee)}</span>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </GlassCard>
-        )
-      })}
-    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })}
+      </div>
+    </main>
   )
 }
 
