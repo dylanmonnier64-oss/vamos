@@ -81,3 +81,8 @@ end;
 $$;
 
 grant execute on function demarrer_match(uuid, text) to anon;
+
+-- ── Doc : sémantique stricte de matchs.moitie ───────────────────────────────
+-- (Écrit ici car 0007 était déjà appliquée quand ce commentaire a été rédigé.)
+comment on column matchs.moitie is
+  'Moitie du tableau (gauche/droite). NON-NULL STRICTEMENT pour les matchs tableau=''winners'' HORS finale : c''est le decoupage de l''arbre principal qui permet l''alternance des convocations (gauche joue, droite joue...). TOUJOURS NULL pour la finale winners (elle reunit les deux moities), toute la consolante (mini-poules independantes, pas de structure gauche/droite), et les formats non-elimination. On ne lui donne PAS un second sens selon le contexte (ne pas reproduire le probleme de `tour`).';

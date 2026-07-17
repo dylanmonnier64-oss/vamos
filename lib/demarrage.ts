@@ -48,17 +48,25 @@ export function estPresent(m: Match): boolean {
 }
 
 /**
- * Matchs LANÇABLES = démarrables ET dont les deux équipes sont présentes. On
- * sépare volontairement deux notions (cf. durcissement présence-verrou) :
- *  - `filtrerDemarrables` : « ce match peut-il occuper le terrain maintenant »
- *    (planification — terrain libre, équipes connues) — INCHANGÉE ;
- *  - `filtrerLancables`   : « et les joueurs sont-ils là » (présence).
- * Seule cette dernière active le bouton « Lancer » et autorise le passage en
+ * DEUX NOTIONS SÉPARÉES — POUR TOUJOURS. Ne jamais les fusionner, ne jamais
+ * mettre la présence dans filtrerDemarrables :
+ *  - `filtrerDemarrables` (DÉMARRABLE) : « ce match peut-il occuper le terrain
+ *    maintenant » — statut en_attente, est_bye=false, 2 équipes connues, terrain
+ *    libre. C'est de la PLANIFICATION. INCHANGÉE : la simulation en dépend.
+ *  - `estLancable` / `filtrerLancables` (LANÇABLE) : démarrable ET les deux
+ *    joueurs sont physiquement là (présence). C'est le VERROU de lancement.
+ * Seul « lançable » active le bouton « Lancer » et autorise le passage en
  * en_cours. Un match ne démarre donc jamais avec une équipe absente (chrono dans
- * le vide + ETA faussées en aval).
+ * le vide + ETA faussées en aval). Le verrou est aussi appliqué côté SQL par la
+ * RPC demarrer_match (migration 0010) — il ne repose pas sur l'UI.
  */
 export function filtrerLancables(matchs: Match[]): Match[] {
   return filtrerDemarrables(matchs).filter(estPresent)
+}
+
+/** Un match précis est-il lançable maintenant (démarrable + deux présences) ? */
+export function estLancable(m: Match, matchs: Match[]): boolean {
+  return estPresent(m) && filtrerDemarrables(matchs).some((x) => x.id === m.id)
 }
 
 /** Wrapper DB : charge les matchs du tournoi et renvoie les démarrables. */

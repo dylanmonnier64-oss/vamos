@@ -160,9 +160,21 @@ async function main() {
       check('proposition sur tournoi non démarré → rejetée', /pas encore d/i.test(errMsg(error)), errMsg(error))
     }
 
-    // Lancement + on met le match réel en_cours (le manager/joueur le lancerait).
+    // Lancement du tournoi.
     await admin.from('tournois').update({ statut: 'en_cours' }).eq('id', tid)
-    await admin.from('matchs').update({ statut: 'en_cours', heure_debut: HEURE }).eq('id', matchReel.id)
+
+    // ── VERROU PRÉSENCE (0010) : demarrer_match refuse sans les deux présences,
+    //    puis accepte une fois cochées. On lance matchReel via cette RPC (pas via
+    //    un UPDATE admin) pour tester le vrai chemin.
+    {
+      const r = await anon.rpc('demarrer_match', { p_match_id: matchReel.id, p_code_acces: codeA })
+      check('demarrer_match sans présence → rejeté', /pour lancer le match/i.test(errMsg(r.error)), errMsg(r.error))
+    }
+    await admin.from('matchs').update({ equipe1_presente: true, equipe2_presente: true }).eq('id', matchReel.id)
+    {
+      const r = await anon.rpc('demarrer_match', { p_match_id: matchReel.id, p_code_acces: codeA })
+      check('demarrer_match avec les deux présences → accepté', !r.error, errMsg(r.error))
+    }
 
     // ── Test 1 : code inexistant → rejet ─────────────────────────────────
     {
