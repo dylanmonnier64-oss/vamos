@@ -1,0 +1,146 @@
+.page {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.back {
+  font-size: 13px;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.back:hover {
+  color: var(--ink-0);
+}
+.titre {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-0);
+}
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-1);
+}
+.erreur {
+  color: #ff8a8a;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sectionTitre {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 2px;
+}
+
+/* Prêts à lancer */
+.lancablesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lancableCard {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px !important;
+  border-radius: 16px !important;
+}
+.lancableInfo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.terrainBadge {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--copper-hi);
+  flex: 0 0 auto;
+}
+.lancableEquipes {
+  font-size: 15px;
+  color: var(--ink-0);
+}
+.vs {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 0 4px;
+}
+
+/* Équipes */
+.equipesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.equipeRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.equipeRowPresent {
+  border-color: rgba(200, 110, 50, 0.32);
+  background: rgba(200, 110, 50, 0.06);
+}
+.equipeNom {
+  font-size: 15px;
+  color: var(--ink-0);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seed {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink-2);
+}
+.equipeMeta {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: right;
+}
+.equipeMetaVide {
+  color: var(--ink-3);
+  text-align: right;
+}

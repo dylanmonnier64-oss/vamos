@@ -59,6 +59,22 @@
   align-items: flex-end;
   gap: 8px;
 }
+.navLien {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-0);
+  text-decoration: none;
+  border: 1px solid rgba(200, 110, 50, 0.42);
+  background: rgba(200, 110, 50, 0.12);
+  transition: background 180ms ease;
+}
+.navLien:hover {
+  background: rgba(200, 110, 50, 0.2);
+}
 
 /* ─── Sections ───────────────────────────────────────────────────── */
 .section {

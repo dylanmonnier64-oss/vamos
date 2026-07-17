@@ -196,6 +196,16 @@ export default async function BracketPage({ params }: { params: { id: string } }
             <LancerButton tournoiId={tournoi.id} />
           </div>
         )}
+        {statut === 'en_cours' && (
+          <div className={styles.launchZone}>
+            <Link href={`/manager/tournoi/${tournoi.id}/checkin`} className={styles.navLien}>
+              Check-in
+            </Link>
+            <Link href={`/manager/tournoi/${tournoi.id}/live`} className={styles.navLien}>
+              Suivi live →
+            </Link>
+          </div>
+        )}
       </header>
 
       {/* Codes d'accès — visibles seulement une fois le tournoi lancé. */}
