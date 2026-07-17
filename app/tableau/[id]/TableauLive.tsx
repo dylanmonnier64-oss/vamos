@@ -22,9 +22,12 @@ interface Props {
   libelles: Record<string, { e1: string; e2: string }>
 }
 
-// Copie PURE de filtrerDemarrables (inlinée pour ne pas tirer next/headers dans
-// le bundle client). Un match démarre si son terrain est libre + 2 équipes connues.
-function demarrablesSur(matchs: Match[]): Set<string> {
+// Copie PURE de filtrerLancables (inlinée pour ne pas tirer next/headers dans le
+// bundle client). Un match est LANÇABLE si son terrain est libre, ses 2 équipes
+// connues ET présentes (la présence est cochée par le manager sur /live). Le
+// bouton « Lancer » public n'apparaît donc qu'une fois les deux équipes là — la
+// RPC demarrer_match le vérifie aussi côté SQL, l'UI ne fait pas foi.
+function lancablesSur(matchs: Match[]): Set<string> {
   const occupes = new Set<number>()
   for (const m of matchs) if (m.statut === 'en_cours' && m.terrain != null) occupes.add(m.terrain)
   const ids = new Set<string>()
@@ -35,7 +38,9 @@ function demarrablesSur(matchs: Match[]): Set<string> {
       m.equipe1_id != null &&
       m.equipe2_id != null &&
       m.terrain != null &&
-      !occupes.has(m.terrain)
+      !occupes.has(m.terrain) &&
+      m.equipe1_presente === true &&
+      m.equipe2_presente === true
     )
       ids.add(m.id)
   }
@@ -170,7 +175,7 @@ function VueCreneaux({
   demarre: boolean
   onLancer: (id: string) => void
 }) {
-  const demarrables = demarrablesSur(matchs)
+  const demarrables = lancablesSur(matchs)
   const nomOuLabel = (m: Match, cote: 1 | 2): string => {
     const id = cote === 1 ? m.equipe1_id : m.equipe2_id
     if (id) return equipeNoms[id] ?? '—'

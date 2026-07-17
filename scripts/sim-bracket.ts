@@ -15,7 +15,7 @@ import {
   type NouveauMatchDynamique,
   type Placement,
 } from '../lib/bracket'
-import { filtrerDemarrables } from '../lib/demarrage'
+import { filtrerDemarrables, filtrerLancables, estPresent } from '../lib/demarrage'
 import { calculerETA } from '../lib/eta'
 import type { Equipe, Match, Tournoi } from '../lib/supabase/database.types'
 
@@ -172,6 +172,8 @@ function jouerEtVerifier(n: number, C: number, plan: NouveauMatchDynamique[], se
   let enCoursDistinct = true
   let demarreSansEquipes = false
   let terrainInactifAvecDemarrable = false
+  let verrouPresenceOk = true // un démarrable sans présence n'est JAMAIS lançable
+  let enCoursSansPresence = false // aucun passage en_cours sans les deux présences
   const dureeMs = DUREE * 60_000
   let now = new Date(HEURE_DEBUT).getTime()
   let iter = 0
@@ -183,6 +185,15 @@ function jouerEtVerifier(n: number, C: number, plan: NouveauMatchDynamique[], se
     for (const d of dem) {
       if (!terrOccup.has(d.terrain!)) {
         const mm = matchs.find((m) => m.id === d.id)!
+        // VERROU : démarrable mais présences pas encore cochées → PAS lançable.
+        if (filtrerLancables(matchs).some((x) => x.id === mm.id)) verrouPresenceOk = false
+        // Le manager coche la présence des deux équipes (geste réel avant lancement).
+        mm.equipe1_presente = true
+        mm.equipe2_presente = true
+        // Contrôle : maintenant lançable.
+        if (!filtrerLancables(matchs).some((x) => x.id === mm.id)) verrouPresenceOk = false
+        // Démarrage — invariant : les deux présences sont true à cet instant.
+        if (!estPresent(mm)) enCoursSansPresence = true
         mm.statut = 'en_cours'
         mm.heure_debut = new Date(now).toISOString()
         terrOccup.add(mm.terrain!)
@@ -210,8 +221,8 @@ function jouerEtVerifier(n: number, C: number, plan: NouveauMatchDynamique[], se
       const gagnantId = rng() < 0.5 ? mm.equipe1_id! : mm.equipe2_id!
       const res = onScoreSaisi({
         match: { ...mm },
-        scoreEquipe1: '6-3',
-        scoreEquipe2: '4-6',
+        scoreEquipe1: '9',
+        scoreEquipe2: '3',
         gagnantId,
         tousLesMatchs: matchs,
         tournoi,
@@ -238,6 +249,8 @@ function jouerEtVerifier(n: number, C: number, plan: NouveauMatchDynamique[], se
   verifier('deux en_cours ne partagent jamais un terrain', enCoursDistinct, 'à chaque étape de démarrage')
   verifier('aucun match démarré sans ses deux équipes', !demarreSansEquipes, 'equipe1_id & equipe2_id requis')
   verifier('aucun terrain inactif alors qu’un match assigné est démarrable', !terrainInactifAvecDemarrable, 'greedy par terrain')
+  verifier('VERROU présence : un match démarrable sans présence n’est PAS lançable', verrouPresenceOk, 'filtrerLancables exige les deux présences')
+  verifier('aucun passage en_cours sans les deux présences', !enCoursSansPresence, 'présence cochée avant chaque démarrage')
 
   // Fin : TOUT match terminé, byes ET fantômes compris → zéro match fantôme non
   // résolu (c'est le test de non-régression du bug historique des équipes disparues :

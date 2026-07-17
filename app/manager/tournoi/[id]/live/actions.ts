@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { construireMajDepuisScore } from '@/lib/progression'
 import { recalculerETA } from '@/lib/eta'
-import { filtrerDemarrables } from '@/lib/demarrage'
+import { filtrerLancables } from '@/lib/demarrage'
 import type { Match, Tournoi } from '@/lib/supabase/database.types'
 
 // ============================================================================
@@ -91,8 +91,8 @@ export async function demarrerMatchManager(tournoiId: string, matchId: string): 
   const { data: matchsData } = await supabase.from('matchs').select('*').eq('tournoi_id', tournoiId)
   const matchs = (matchsData ?? []) as Match[]
 
-  if (!filtrerDemarrables(matchs).some((m) => m.id === matchId)) {
-    return { error: 'Ce match ne peut pas démarrer (terrain occupé ou équipes inconnues).' }
+  if (!filtrerLancables(matchs).some((m) => m.id === matchId)) {
+    return { error: 'Ce match ne peut pas démarrer (terrain occupé, équipes inconnues, ou présence non confirmée).' }
   }
 
   const { error } = await supabase

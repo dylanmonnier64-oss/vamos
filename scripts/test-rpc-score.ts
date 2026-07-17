@@ -21,6 +21,19 @@ const get = (k: string) => env.split('\n').find((l) => l.startsWith(k + '='))?.s
 const URL_SB = get('NEXT_PUBLIC_SUPABASE_URL')
 const ANON = get('NEXT_PUBLIC_SUPABASE_ANON_KEY')
 const SERVICE = get('SUPABASE_SERVICE_ROLE_KEY')
+const TEST_MODE = get('SUPABASE_TEST_MODE')
+
+// GARDE anti-prod : ce harnais CRÉE et supprime un tournoi dans la base pointée
+// par NEXT_PUBLIC_SUPABASE_URL. Tant que cette base n'est pas explicitement
+// marquée comme environnement de test (SUPABASE_TEST_MODE=true, portée seulement
+// par le .env.local local, absente en prod/CI), on NE touche à rien. Le vrai
+// correctif — un projet Supabase de test séparé — est noté pour le pré-vente.
+if (TEST_MODE !== 'true') {
+  console.log('⏭  SUPABASE_TEST_MODE ≠ true → harnais RPC SAUTÉ (aucune écriture en base).')
+  console.log('   Pour l\'exécuter contre un environnement de test explicite, ajoute')
+  console.log('   SUPABASE_TEST_MODE=true dans .env.local (jamais en prod/CI).')
+  process.exit(0)
+}
 
 if (!SERVICE) {
   console.log('⚠  SUPABASE_SERVICE_ROLE_KEY absent de .env.local.')
@@ -175,20 +188,20 @@ async function main() {
 
     // ── Test 6 : re-proposition écrase sa propre proposition ─────────────
     {
-      await proposer(matchReel.id, codeA, '6 6', '4 3') // A propose X
-      await proposer(matchReel.id, codeA, '7 6', '5 4') // A se corrige → Y
+      await proposer(matchReel.id, codeA, '9', '3') // A propose X
+      await proposer(matchReel.id, codeA, '9', '7') // A se corrige → Y
       const m = (await recharger()).find((x) => x.id === matchReel.id)!
       const propA = m.propositions_score[matchReel.equipe1_id!]
       check(
         're-proposition d\'une équipe écrase la sienne (statut propose)',
-        m.statut_score === 'propose' && propA?.e1 === '7 6' && propA?.e2 === '5 4',
+        m.statut_score === 'propose' && propA?.e1 === '9' && propA?.e2 === '7',
         JSON.stringify({ statut: m.statut_score, propA })
       )
     }
 
     // ── Test 5 : deux scores différents → conteste, non entériné ─────────
     {
-      await proposer(matchReel.id, codeB, '4 3', '6 6') // B propose un score différent
+      await proposer(matchReel.id, codeB, '9', '8') // B propose un score différent
       const m = (await recharger()).find((x) => x.id === matchReel.id)!
       check(
         'deux scores différents → conteste, match en_cours, score non entériné',
@@ -200,20 +213,20 @@ async function main() {
     // ── Test 4 : deux scores identiques → confirme + progression ─────────
     {
       // Les deux équipes proposent le MÊME score (A d'abord re-propose Z, puis B).
-      await proposer(matchReel.id, codeA, '6 6', '4 3')
-      const r = await proposer(matchReel.id, codeB, '6 6', '4 3')
+      await proposer(matchReel.id, codeA, '9', '3')
+      const r = await proposer(matchReel.id, codeB, '9', '3')
       const rjson = r.data as { statut_score: string; confirme: boolean } | null
       const m = (await recharger()).find((x) => x.id === matchReel.id)!
       check(
         'deux scores identiques → confirme + match termine',
-        rjson?.confirme === true && m.statut_score === 'confirme' && m.statut === 'termine' && m.score_equipe1 === '6 6',
+        rjson?.confirme === true && m.statut_score === 'confirme' && m.statut === 'termine' && m.score_equipe1 === '9',
         JSON.stringify({ rjson, statut: m.statut, statut_score: m.statut_score })
       )
 
       // L'appelant applicatif : onScoreSaisi (TS) → progresser_bracket (RPC anon).
       matchs = await recharger()
       const tournoi = { nb_equipes: N, categorie_fft: 'P100' } as Pick<Tournoi, 'nb_equipes' | 'categorie_fft'>
-      const maj = construireMajDepuisScore(matchs, tournoi, matchReel.id, '6 6', '4 3')
+      const maj = construireMajDepuisScore(matchs, tournoi, matchReel.id, '9', '3')
       if ('erreur' in maj) {
         check('progression : construireMajDepuisScore OK', false, maj.erreur)
       } else {

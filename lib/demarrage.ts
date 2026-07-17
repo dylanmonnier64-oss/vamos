@@ -42,6 +42,25 @@ export function filtrerDemarrables(matchs: Match[]): Match[] {
     .sort(ordre)
 }
 
+/** Les deux équipes sont physiquement présentes (prérequis de LANCEMENT). */
+export function estPresent(m: Match): boolean {
+  return m.equipe1_presente === true && m.equipe2_presente === true
+}
+
+/**
+ * Matchs LANÇABLES = démarrables ET dont les deux équipes sont présentes. On
+ * sépare volontairement deux notions (cf. durcissement présence-verrou) :
+ *  - `filtrerDemarrables` : « ce match peut-il occuper le terrain maintenant »
+ *    (planification — terrain libre, équipes connues) — INCHANGÉE ;
+ *  - `filtrerLancables`   : « et les joueurs sont-ils là » (présence).
+ * Seule cette dernière active le bouton « Lancer » et autorise le passage en
+ * en_cours. Un match ne démarre donc jamais avec une équipe absente (chrono dans
+ * le vide + ETA faussées en aval).
+ */
+export function filtrerLancables(matchs: Match[]): Match[] {
+  return filtrerDemarrables(matchs).filter(estPresent)
+}
+
 /** Wrapper DB : charge les matchs du tournoi et renvoie les démarrables. */
 export async function matchsDemarrables(tournoiId: string): Promise<Match[]> {
   const { createClient } = await import('./supabase/server')

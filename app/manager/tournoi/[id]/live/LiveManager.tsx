@@ -106,7 +106,7 @@ export default function LiveManager({
   const validerSaisie = async (matchId: string) => {
     const parsed = parseSaisieCombinee(saisies[matchId] ?? '')
     if (!parsed) {
-      setErreur('Format de score invalide. Exemple : 6-4 6-3')
+      setErreur('Format de score invalide. Exemple : 9-3')
       return
     }
     await valider(matchId, parsed.s1, parsed.s2)
@@ -170,7 +170,11 @@ export default function LiveManager({
           <h2 className={styles.colTitre}>Terrains</h2>
           {terrains.map((t) => {
             const enCours = matchs.find((m) => m.terrain === t && m.statut === 'en_cours' && !m.est_bye)
-            const dem = matchs.find((m) => m.terrain === t && demarrables.has(m.id))
+            // Plusieurs matchs peuvent être assignés au même terrain (créneaux
+            // différents) : on prend le plus petit créneau, pas un au hasard.
+            const dem = matchs
+              .filter((m) => m.terrain === t && demarrables.has(m.id))
+              .sort((a, b) => (a.creneau ?? 0) - (b.creneau ?? 0))[0]
             const prochain = matchs
               .filter((m) => m.terrain === t && m.statut !== 'termine' && !m.est_bye)
               .sort((a, b) => (a.creneau ?? 0) - (b.creneau ?? 0))[0]
@@ -196,22 +200,14 @@ export default function LiveManager({
                     />
                   ) : (
                     <div className={styles.match}>
-                      <EquipeLigne
-                        nom={nomOuLabel(enCours, 1)}
-                        seed={enCours.equipe1_id ? equipeInfos[enCours.equipe1_id]?.tete_serie ?? null : null}
-                        presente={enCours.equipe1_presente}
-                        onPresence={(v) => presence(enCours.id, 1, v)}
-                      />
-                      <EquipeLigne
-                        nom={nomOuLabel(enCours, 2)}
-                        seed={enCours.equipe2_id ? equipeInfos[enCours.equipe2_id]?.tete_serie ?? null : null}
-                        presente={enCours.equipe2_presente}
-                        onPresence={(v) => presence(enCours.id, 2, v)}
-                      />
+                      {/* Match en cours : présence déjà confirmée au lancement. */}
+                      <div className={styles.equipeSimple}>{nomOuLabel(enCours, 1)}</div>
+                      <div className={styles.vs}>vs</div>
+                      <div className={styles.equipeSimple}>{nomOuLabel(enCours, 2)}</div>
                       <div className={styles.scoreForm}>
                         <input
                           className="form-input"
-                          placeholder="6-4 6-3"
+                          placeholder="9-3"
                           value={saisies[enCours.id] ?? ''}
                           onChange={(e) => setSaisies((p) => ({ ...p, [enCours.id]: e.target.value }))}
                           disabled={busy === enCours.id}
@@ -229,18 +225,32 @@ export default function LiveManager({
                   )
                 ) : dem ? (
                   <div className={styles.match}>
-                    <div className={styles.equipeSimple}>{nomOuLabel(dem, 1)}</div>
-                    <div className={styles.vs}>vs</div>
-                    <div className={styles.equipeSimple}>{nomOuLabel(dem, 2)}</div>
+                    {/* Match en attente : on coche la présence AVANT de lancer. */}
+                    <EquipeLigne
+                      nom={nomOuLabel(dem, 1)}
+                      seed={dem.equipe1_id ? equipeInfos[dem.equipe1_id]?.tete_serie ?? null : null}
+                      presente={dem.equipe1_presente}
+                      onPresence={(v) => presence(dem.id, 1, v)}
+                    />
+                    <EquipeLigne
+                      nom={nomOuLabel(dem, 2)}
+                      seed={dem.equipe2_id ? equipeInfos[dem.equipe2_id]?.tete_serie ?? null : null}
+                      presente={dem.equipe2_presente}
+                      onPresence={(v) => presence(dem.id, 2, v)}
+                    />
                     <div className={styles.foot}>
-                      <LiquidButton
-                        variant="primary"
-                        type="button"
-                        onClick={() => lancer(dem.id)}
-                        disabled={busy === dem.id}
-                      >
-                        Lancer le match
-                      </LiquidButton>
+                      {dem.equipe1_presente && dem.equipe2_presente ? (
+                        <LiquidButton
+                          variant="primary"
+                          type="button"
+                          onClick={() => lancer(dem.id)}
+                          disabled={busy === dem.id}
+                        >
+                          Lancer le match
+                        </LiquidButton>
+                      ) : (
+                        <span className={styles.raison}>Coche la présence des deux équipes pour lancer.</span>
+                      )}
                     </div>
                   </div>
                 ) : prochain ? (
@@ -357,7 +367,7 @@ function ContesteBloc({
       <div className={styles.scoreForm}>
         <input
           className="form-input"
-          placeholder="Autre score : 6-4 6-3"
+          placeholder="Autre score : 9-3"
           value={saisie}
           onChange={(e) => setSaisie(e.target.value)}
           disabled={busy}

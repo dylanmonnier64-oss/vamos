@@ -138,7 +138,7 @@ export default function TPlayer(props: Props) {
   const proposer = async (m: Match) => {
     const parsed = parseSaisieCombinee(saisie)
     if (!parsed) {
-      setErreur('Format de score invalide. Exemple : 6-4 6-3')
+      setErreur('Format de score invalide. Exemple : 9-3')
       return
     }
     setBusy(true)
@@ -229,7 +229,7 @@ export default function TPlayer(props: Props) {
                   <input
                     className="form-input"
                     inputMode="numeric"
-                    placeholder="6-4 6-3"
+                    placeholder="9-3"
                     value={saisie}
                     onChange={(e) => setSaisie(e.target.value)}
                     disabled={busy}
